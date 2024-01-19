@@ -11,21 +11,22 @@ pipeline{
 
     stage('Docker build container nginx'){
         steps {
-            sh """
-                docker build -t shaytanchik/nginx-jenkins:1.${env.BUILD_NUMBER} .
-                docker push shaytanchik/nginx-jenkins:1.${env.BUILD_NUMBER}
-                docker rmi -f shaytanchik/nginx-jenkins:1.${env.BUILD_NUMBER}
-            """
-       }
+            dir ('nginx') {
+                sh """
+                    docker build -t shaytanchik/nginx-jenkins-d:1.${env.BUILD_NUMBER} . 
+                    docker push shaytanchik/nginx-jenkins-d:1.${env.BUILD_NUMBER}
+                    docker rmi -f shaytanchik/nginx-jenkins-d:1.${env.BUILD_NUMBER}
+                """
+           }
+        }
     }
-
     stage("Docker build container apache"){
         steps {
             dir ('apache') {
                 sh """
-                    docker build -t shaytanchik/apache-jenkins:1.${env.BUILD_NUMBER} .
-                    docker push shaytanchik/apache-jenkins:1.${env.BUILD_NUMBER}
-                    docker rmi -f shaytanchik/apache-jenkins:1.${env.BUILD_NUMBER}
+                    docker build -t shaytanchik/apache-jenkins-d:1.${env.BUILD_NUMBER} .
+                    docker push shaytanchik/apache-jenkins-d:1.${env.BUILD_NUMBER}
+                    docker rmi -f shaytanchik/apache-jenkins-d:1.${env.BUILD_NUMBER}
                 """
             }
         }
@@ -33,7 +34,7 @@ pipeline{
     
     stage('deploy to ec2_server used ansible'){
             steps {
-                ansiblePlaybook becomeUser: 'jenkins', credentialsId: 'ec2_ubuntu_server', inventory: '/home/jenkins/ansible/inventory', playbook: '/home/jenkins/ansible/playbook.yml', vaultTmpPath: '', extraVars: [BUILD_NUMBER: env.BUILD_NUMBER]
+                ansiblePlaybook becomeUser: 'ubuntu', credentialsId: 'ec2_ubuntu_server', inventory: '/home/jenkins/ansible/hosts.txt', playbook: '/home/jenkins/ansible/playbook.yml', vaultTmpPath: '', extraVars: [BUILD_NUMBER: env.BUILD_NUMBER]
             }
         }
     }
